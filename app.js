@@ -11,7 +11,7 @@ function strikeMap() {
         .attr({
             'width': width + margin.left + margin.right,
             'height': height + margin.top + margin.bottom
-        }).append('g').classed("chartContainer", true)
+        }).append('g').classed("mapContainer", true)
         .attr({
             "transform": `translate(${margin.left},${margin.top})`
         });
