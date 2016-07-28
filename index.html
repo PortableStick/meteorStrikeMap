@@ -7,11 +7,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="map"></div>
+  <div id="chart"></div>
   <script src="node_modules/d3/d3.min.js"></script>
   <script src="app.js"></script>
   <script>
-    window.onload = function() {}
+    window.onload = function() {
+      var map = strikeMap();
+      map.width(500).height(500);
+      d3.select('#chart').call(map);
+    }
   </script>
 </body>
 </html>
