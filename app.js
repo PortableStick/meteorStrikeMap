@@ -34,3 +34,12 @@ function strikeMap() {
   };
   return chart;
 }
+
+function getJSON(url) {
+  return new Promise(function(resolve, reject) {
+    d3.json(url, function(error, data) {
+      if(error) { reject(error) };
+      resolve(data);
+    })
+  });
+}

@@ -15,6 +15,10 @@
       var map = strikeMap();
       map.width(500).height(500);
       d3.select('#chart').call(map);
+      getJSON('https://dl.dropboxusercontent.com/u/4223104/world-50m.json')
+        .then(function(data) {
+          console.log(data);
+        });
     }
   </script>
 </body>
