@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  describe('Map should be properly created', function () {
+  describe('Map object gets created', function () {
 
     beforeEach(function() {
       this.height = 500;
@@ -14,7 +14,7 @@
 
     afterEach(function() {
       d3.select('#chart').html("");
-    })
+    });
 
     describe('the svg container', function() {
       it('should be created', function() {
@@ -72,5 +72,46 @@
     function selectMapObject() {
       return d3.select('g.mapContainer');
     }
+  });
+
+  describe('The getJSON helper function', function() {
+    describe('works with valid input', function() {
+      var gdata;
+      beforeEach(function(done) {
+        this.testPromise = getJSON('https://dl.dropboxusercontent.com/u/4223104/world-50m.json')
+          .then(function(data) {
+            gdata = data;
+            done();
+          })
+          .catch(function(error) {
+            done.fail();
+          });
+      });
+      it('returns a promise', function() {
+        expect(typeof this.testPromise).toBe('object');
+        expect(this.testPromise.then()).not.toBe(undefined);
+      });
+      it('should fetch JSON data from valid URL', function(done) {
+        expect(gdata).not.toBe(null);
+        expect(gdata.type).toBe("Topology");
+        done();
+      });
+    });
+    describe('handles errors', function() {
+      var gerror;
+      beforeEach(function(done) {
+        getJSON('notaworkingurl').then(function(data) {
+          done.fail()
+        })
+        .catch(function(error) {
+          gerror = error;
+          done();
+        });
+      });
+      it('should send an error when trying to access an invalid URL', function(done) {
+        expect(gerror).not.toBe(null);
+        done();
+      });
+    });
   });
 })();
