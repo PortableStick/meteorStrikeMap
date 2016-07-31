@@ -1,15 +1,25 @@
 (function () {
   'use strict';
+  var worldDataLocal = '/Users/gregsmith/Dropbox/Public/world-50m.json',
+      meteorDataLocal = '/Users/gregsmith/Dropbox/Public/meteorite-strike-data.json';
 
   describe('Map object gets created', function () {
 
-    beforeEach(function() {
+    beforeEach(function(done) {
       this.height = 500;
       this.width = 500;
       this.margin = { top: 50, right: 60, bottom: 70, left: 80 };
       this.testMap = strikeMap();
       this.testMap.width(this.width).height(this.height).margin(this.margin);
-      d3.select('#chart').call(this.testMap);
+      var mp = this.testMap;
+      Promise.all([getJSON(worldDataLocal), getJSON(meteorDataLocal)])
+        .then(function(data) {
+          d3.select('#chart').datum(data).call(mp);
+          done();
+        }).catch(function(error) {
+          console.log(error);
+          done();
+        });
     });
 
     afterEach(function() {
@@ -78,7 +88,7 @@
     describe('works with valid input', function() {
       var gdata;
       beforeEach(function(done) {
-        this.testPromise = getJSON('https://dl.dropboxusercontent.com/u/4223104/world-50m.json')
+        this.testPromise = getJSON(worldDataLocal)
           .then(function(data) {
             gdata = data;
             done();
