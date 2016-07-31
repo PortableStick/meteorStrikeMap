@@ -1,7 +1,21 @@
 function strikeMap() {
+  // http://bl.ocks.org/patricksurry/6621971
+  var maximumLatitude = 83,
+      initialRotation = 60,
+      maximumScaleFactor = 10;
   var margin = { top: 0, right: 180, bottom: 120, left: 100 },
         width = 1200 - margin.left - margin.right,
         height = 720 - margin.top - margin.bottom;
+  var projection = d3.geo.mercator()
+                      .rotate([initialRotation, 0])
+                      .scale(1)
+                      .translate([width / 2, height / 2]);
+
+  var bounds = findMercatorBounds(projection, maximumLatitude),
+      scale =  width / (bounds[1][0] - bounds[0][0]), // ratio of svg width to boundary width
+      scaleExtent = [scale, scale * maximumScaleFactor];
+
+  projection.scale(scaleExtent[0]);
 
   function chart(selection) {
     d3.select(this).html("") // clear present maps before redrawing
@@ -15,7 +29,32 @@ function strikeMap() {
         .attr({
             "transform": `translate(${margin.left},${margin.top})`
         });
-    });
+      var meteorites = data[1].features;
+      svg.append('g')
+        .selectAll('path')
+        .data(meteorites)
+        .enter()
+        .append('circle')
+        .classed('meteoriteStrike', true)
+        .attr({
+          'cx': function(d) {
+            return projection([d.properties.reclong, d.properties.reclat])[0]
+          },
+          'cy': function(d) {
+            return projection([d.properties.reclong, d.properties.reclat])[1]
+          }
+        });
+    });//selection
+  }
+
+  function findMercatorBounds(projection, maximumLatitude) {
+    var yaw = projection.rotate()[0],
+        xyMax = projection([-yaw+180-1e-6, -maximumLatitude]),
+        xyMin = projection([-yaw-180+1e-6, maximumLatitude]);
+    return [xyMin, xyMax];
+  }
+  chart.getProjection = function() {
+    return projection;
   }
   chart.width = function(_) {
     if(!arguments.length) {return width;}
