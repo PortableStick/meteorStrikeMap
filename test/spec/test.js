@@ -1,7 +1,11 @@
 (function () {
   'use strict';
   var worldDataLocal = '/Users/gregsmith/Dropbox/Public/world-50m.json',
-      meteorDataLocal = '/Users/gregsmith/Dropbox/Public/meteorite-strike-data.json';
+      meteorDataLocal = '/Users/gregsmith/Dropbox/Public/meteorite-strike-data.json',
+      testStrokeColor = 'white',
+      testStrokeWidth = '1',
+      mapFillColor = '#266D98',
+      mapStrokeWith = '1';
 
   describe('Map object gets created', function () {
 
@@ -128,7 +132,7 @@
   });
 
   describe('The map object parses data', function() {
-    var meteoriteData;
+    var meteoriteData, worldData, gdata;
     function getChart() {
       return d3.select('#chart');
     }
@@ -138,12 +142,17 @@
     function getMeteoriteStrikes() {
       return getSVG().selectAll('circle.meteoriteStrike')[0];
     }
+    function getMapPaths() {
+      return getSVG().selectAll('path.world')[0];
+    }
     beforeEach(function(done) {
       this.map = strikeMap();
       var testMap = this.map;
       Promise.all([getJSON(worldDataLocal), getJSON(meteorDataLocal)])
         .then(function(data) {
+          gdata = data;
           meteoriteData = data[1].features;
+          worldData = data[0].objects.countries;
           getChart().datum(data).call(testMap);
           done();
         }).catch(function(error) {
@@ -154,7 +163,7 @@
     afterEach(function() {
       getChart().html("");
     });
-    describe('for meteorite strikes', function() {
+    describe('meteorite strikes', function() {
       it('should place a circle for each meteor strike', function(done) {
         var numberOfMeteors = meteoriteData.length;
         expect(getMeteoriteStrikes().length).toBe(numberOfMeteors);
@@ -171,12 +180,58 @@
       });
       it('should set the circle\'s radius based on the mass property', function(done) {
         var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
-        console.log(`Checking circle radius with random number: ${someRandomNumber}`);
+        console.log(`Checking circle's radius with random number: ${someRandomNumber}`);
         var setRadius = this.map.getSetRadius();
         var circleRadius = +d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('r');
         expect(circleRadius).toBe(setRadius(meteoriteData[someRandomNumber].properties.mass));
-        expect(circleRadius).toBeLessThan(this.map.impactRadiusMax());
-        expect(circleRadius).toBeGreaterThan(this.map.impactRadiusMin());
+        expect(circleRadius).toBeLessThan(this.map.impactRadiusMax() + 1e-4);
+        expect(circleRadius).toBeGreaterThan(this.map.impactRadiusMin() - 1e-4);
+        done();
+      });
+      it('should set the circle\'s hue based on the mass property', function(done) {
+        var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
+        console.log(`Checking circle's hue with random number: ${someRandomNumber}`);
+        var setHue = this.map.getSetHue();
+        var circleHue = d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('fill');
+        expect(circleHue).toBe(setHue(meteoriteData[someRandomNumber].properties.mass));
+        done();
+      });
+      it('should set the circle\'s opacity to 50% regardless of mass', function(done) {
+        var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
+        console.log(`Checking circle's opacity with random number: ${someRandomNumber}`);
+        var circleOpacity = d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('fill-opacity');
+        expect(circleOpacity).toBe('0.5')
+        done();
+      });
+      it(`should set the circle's stroke-width to ${testStrokeWidth} and stroke color to ${testStrokeColor}`, function(done) {
+        var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
+        console.log(`Checking circle's stroke with random number: ${someRandomNumber}`);
+        var testCircle = d3.select(getMeteoriteStrikes()[someRandomNumber]);
+        var testColor = testCircle.attr('stroke-fill');
+        var testStroke = testCircle.attr('stroke');
+        expect(testColor).toBe(testStrokeColor);
+        expect(testStroke).toBe(testStrokeWidth);
+        done();
+      });
+    });
+    describe('map data', function() {
+      it('should draw the map', function(done) {
+        var mapFeatures = topojson.feature(gdata[0], worldData).features;
+        var someRandomNumber = Math.floor(Math.random() * mapFeatures.length);
+        var path = d3.geo.path().projection(this.map.getProjection());
+        console.log(`Checking map path with random number: ${someRandomNumber}`);
+        var testPath = path(mapFeatures[someRandomNumber]);
+        expect(d3.select(getMapPaths()[someRandomNumber]).attr('d')).toEqual(testPath);
+        done();
+      });
+      it(`it should draw the map with a fill color of ${mapFillColor} and a stroke width of ${mapStrokeWith}`,function (done) {
+          var mapFeatures = topojson.feature(gdata[0], worldData).features;
+          var someRandomNumber = Math.floor(Math.random() * mapFeatures.length);
+          var path = d3.geo.path().projection(this.map.getProjection());
+          console.log(`Checking map stroke and fill with random number: ${someRandomNumber}`);
+          var testPath = path(mapFeatures[someRandomNumber]);
+          expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke-fill')).toBe(mapFillColor);
+          expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke')).toBe(mapStrokeWith);
         done();
       });
     });
