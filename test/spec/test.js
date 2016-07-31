@@ -154,7 +154,7 @@
     afterEach(function() {
       getChart().html("");
     });
-    describe('for meteor strikes', function() {
+    describe('for meteorite strikes', function() {
       it('should place a circle for each meteor strike', function(done) {
         var numberOfMeteors = meteoriteData.length;
         expect(getMeteoriteStrikes().length).toBe(numberOfMeteors);
