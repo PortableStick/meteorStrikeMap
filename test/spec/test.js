@@ -17,7 +17,7 @@
           d3.select('#chart').datum(data).call(mp);
           done();
         }).catch(function(error) {
-          console.log(error);
+          console.error(error);
           done();
         });
     });
@@ -94,6 +94,7 @@
             done();
           })
           .catch(function(error) {
+            console.error(error);
             done.fail();
           });
       });
@@ -115,11 +116,67 @@
         })
         .catch(function(error) {
           gerror = error;
+          console.error(error);
           done();
         });
       });
       it('should send an error when trying to access an invalid URL', function(done) {
         expect(gerror).not.toBe(null);
+        done();
+      });
+    });
+  });
+
+  describe('The map object parses data', function() {
+    var meteoriteData;
+    function getChart() {
+      return d3.select('#chart');
+    }
+    function getSVG() {
+      return d3.select('svg');
+    }
+    function getMeteoriteStrikes() {
+      return getSVG().selectAll('circle.meteoriteStrike')[0];
+    }
+    beforeEach(function(done) {
+      this.map = strikeMap();
+      var testMap = this.map;
+      Promise.all([getJSON(worldDataLocal), getJSON(meteorDataLocal)])
+        .then(function(data) {
+          meteoriteData = data[1].features;
+          getChart().datum(data).call(testMap);
+          done();
+        }).catch(function(error) {
+          console.eror(error);
+          done();
+        });
+    });
+    afterEach(function() {
+      getChart().html("");
+    });
+    describe('for meteor strikes', function() {
+      it('should place a circle for each meteor strike', function(done) {
+        var numberOfMeteors = meteoriteData.length;
+        expect(getMeteoriteStrikes().length).toBe(numberOfMeteors);
+        done();
+      });
+      it('should set each circle\'s position based on the coordinate data', function(done) {
+        var testProjection = this.map.getProjection();
+        var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
+        console.log(`Checking circle position with random number: ${someRandomNumber}`);
+        var testCoords = testProjection([meteoriteData[someRandomNumber].properties.reclong, meteoriteData[someRandomNumber].properties.reclat]);
+        expect(+d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('cx')).toBe(testCoords[0]);
+        expect(+d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('cy')).toBe(testCoords[1]);
+        done();
+      });
+      it('should set the circle\'s radius based on the mass property', function(done) {
+        var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
+        console.log(`Checking circle radius with random number: ${someRandomNumber}`);
+        var setRadius = this.map.getSetRadius();
+        var circleRadius = +d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('r');
+        expect(circleRadius).toBe(setRadius(meteoriteData[someRandomNumber].properties.mass));
+        expect(circleRadius).toBeLessThan(this.map.impactRadiusMax());
+        expect(circleRadius).toBeGreaterThan(this.map.impactRadiusMin());
         done();
       });
     });
