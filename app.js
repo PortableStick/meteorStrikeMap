@@ -13,12 +13,14 @@ function strikeMap() {
                       .scale(1)
                       .translate([width / 2, height / 2]);
   var impactScale = d3.scale.linear();
+  var colorScale = d3.scale.category10();
 
   var bounds = findMercatorBounds(projection, maximumLatitude),
       scale =  width / (bounds[1][0] - bounds[0][0]), // ratio of svg width to boundary width
       scaleExtent = [scale, scale * maximumScaleFactor];
 
   projection.scale(scaleExtent[0]);
+  var path = d3.geo.path().projection(projection);
 
   function chart(selection) {
     d3.select(this).html("") // clear present maps before redrawing
@@ -32,10 +34,11 @@ function strikeMap() {
         .attr({
             "transform": `translate(${margin.left},${margin.top})`
         });
+      var worldData = data[0];
       var meteorites = data[1].features;
       var massData = d3.extent(meteorites.map(function(d){return +d.properties.mass;}));
       impactScale.domain(massData).range([impactRadiusMin, impactRadiusMax]);
-      svg.append('g')
+      var meteorites = svg.append('g')
         .selectAll('path')
         .data(meteorites)
         .enter()
@@ -50,8 +53,26 @@ function strikeMap() {
           },
           'r': function(d) {
             return setRadius(d.properties.mass);
-          }
+          },
+          'fill': function(d) {
+            return setHue(d.properties.mass);
+          },
+          'fill-opacity': 0.5,
+          'stroke': 1,
+          'stroke-fill': 'white'
         });
+
+      var world = svg.append('g')
+            .selectAll('path')
+            .data(topojson.feature(worldData, worldData.objects.countries).features)
+            .enter()
+            .append('path')
+            .classed('world', true)
+            .attr({
+              'd': path,
+              'stroke': 1,
+              'stroke-fill': '#266D98'
+            })
     });//selection
   }
 
@@ -66,12 +87,19 @@ function strikeMap() {
     return impactScale(mass);
   }
 
+  function setHue(mass) {
+    return colorScale(mass);
+  }
+
+  chart.getSetHue = function() {
+    return setHue;
+  };
   chart.getSetRadius = function() {
     return setRadius;
-  }
+  };
   chart.getProjection = function() {
     return projection;
-  }
+  };
   chart.width = function(_) {
     if(!arguments.length) {return width;}
     width = _;
