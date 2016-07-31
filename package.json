@@ -10,7 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^3.3.6",
-    "d3": "^3.5.17"
+    "d3": "^3.5.17",
+    "topojson": "^1.6.26"
   },
   "devDependencies": {
     "jasmine": "^2.4.1"
