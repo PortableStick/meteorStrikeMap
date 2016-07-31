@@ -2,7 +2,9 @@ function strikeMap() {
   // http://bl.ocks.org/patricksurry/6621971
   var maximumLatitude = 83,
       initialRotation = 60,
-      maximumScaleFactor = 10;
+      maximumScaleFactor = 10,
+      impactRadiusMin = 2,
+      impactRadiusMax = 45;
   var margin = { top: 0, right: 180, bottom: 120, left: 100 },
         width = 1200 - margin.left - margin.right,
         height = 720 - margin.top - margin.bottom;
@@ -10,6 +12,7 @@ function strikeMap() {
                       .rotate([initialRotation, 0])
                       .scale(1)
                       .translate([width / 2, height / 2]);
+  var impactScale = d3.scale.linear();
 
   var bounds = findMercatorBounds(projection, maximumLatitude),
       scale =  width / (bounds[1][0] - bounds[0][0]), // ratio of svg width to boundary width
@@ -30,6 +33,8 @@ function strikeMap() {
             "transform": `translate(${margin.left},${margin.top})`
         });
       var meteorites = data[1].features;
+      var massData = d3.extent(meteorites.map(function(d){return +d.properties.mass;}));
+      impactScale.domain(massData).range([impactRadiusMin, impactRadiusMax]);
       svg.append('g')
         .selectAll('path')
         .data(meteorites)
@@ -42,6 +47,9 @@ function strikeMap() {
           },
           'cy': function(d) {
             return projection([d.properties.reclong, d.properties.reclat])[1]
+          },
+          'r': function(d) {
+            return setRadius(d.properties.mass);
           }
         });
     });//selection
@@ -52,6 +60,14 @@ function strikeMap() {
         xyMax = projection([-yaw+180-1e-6, -maximumLatitude]),
         xyMin = projection([-yaw-180+1e-6, maximumLatitude]);
     return [xyMin, xyMax];
+  }
+
+  function setRadius(mass) {
+    return impactScale(mass);
+  }
+
+  chart.getSetRadius = function() {
+    return setRadius;
   }
   chart.getProjection = function() {
     return projection;
@@ -69,6 +85,16 @@ function strikeMap() {
   chart.margin = function(_) {
     if(!arguments.length) {return margin;}
     margin = _;
+    return this;
+  };
+  chart.impactRadiusMin = function(_) {
+    if(!arguments.length) {return impactRadiusMin;}
+    impactRadiusMin = _;
+    return this;
+  };
+  chart.impactRadiusMax = function(_) {
+    if(!arguments.length) {return impactRadiusMax;}
+    impactRadiusMax = _;
     return this;
   };
   return chart;
