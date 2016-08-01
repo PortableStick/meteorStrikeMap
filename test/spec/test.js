@@ -4,95 +4,112 @@
       meteorDataLocal = '/Users/gregsmith/Dropbox/Public/meteorite-strike-data.json',
       testStrokeColor = 'white',
       testStrokeWidth = '1',
-      mapFillColor = '#266D98',
-      mapStrokeWith = '1';
+      mapFillColor = '#95E1D3',
+      mapStrokeWith = '1',
+      height = 500,
+      width = 500,
+      margin = { top: 50, right: 60, bottom: 70, left: 80 };
 
-  describe('Map object gets created', function () {
+  var meteoriteData, worldData, gdata, testMap, testPromise;
 
-    beforeEach(function(done) {
-      this.height = 500;
-      this.width = 500;
-      this.margin = { top: 50, right: 60, bottom: 70, left: 80 };
-      this.testMap = strikeMap();
-      this.testMap.width(this.width).height(this.height).margin(this.margin);
-      var mp = this.testMap;
+  function getChart() {
+      return d3.select('#chart');
+    }
+  function getSVG() {
+    return d3.select('svg');
+  }
+  function getMeteoriteStrikes() {
+    return getSVG().selectAll('circle.meteoriteStrike')[0];
+  }
+  function getMapPaths() {
+    return getSVG().selectAll('path.world')[0];
+  }
+  function selectMapObject() {
+    return d3.select('g.mapContainer');
+  }
+  function setup(done) {
+    testMap = strikeMap();
+      testMap.width(width).height(height).margin(margin);
       Promise.all([getJSON(worldDataLocal), getJSON(meteorDataLocal)])
         .then(function(data) {
-          d3.select('#chart').datum(data).call(mp);
+          gdata = data;
+          meteoriteData = data[1].features;
+          worldData = data[0].objects.countries;
+          getChart().datum(data).call(testMap);
           done();
         }).catch(function(error) {
           console.error(error);
           done();
         });
-    });
+  }
+  function cleanup() {
+    getChart().html("");
+    var height = 500,
+      width = 500,
+      margin = { top: 50, right: 60, bottom: 70, left: 80 },
+      testPromise = '';
+  }
 
-    afterEach(function() {
-      d3.select('#chart').html("");
-    });
+  describe('Map object gets created', function () {
+
+    beforeEach(setup);
+
+    afterEach(cleanup);
 
     describe('the svg container', function() {
       it('should be created', function() {
-      expect(selectSVG()).not.toBeNull();
+      expect(getSVG()).not.toBeNull();
       });
 
       it('should be the specified width', function() {
-        expect(+selectSVG().attr('width')).toBe(this.width + this.margin.right + this.margin.left);
+        expect(+getSVG().attr('width')).toBe(width + margin.right + margin.left);
       });
 
       it('should be the specified height', function() {
-        expect(+selectSVG().attr('height')).toBe(this.height + this.margin.top + this.margin.bottom);
+        expect(+getSVG().attr('height')).toBe(height + margin.top + margin.bottom);
       });
     });
 
     describe('the map object', function() {
       it('should be positioned inside the SVG container by the margin values', function() {
-        expect(selectMapObject().attr('transform')).toBe(`translate(${this.margin.left},${this.margin.top})`)
+        expect(selectMapObject().attr('transform')).toBe(`translate(${margin.left},${margin.top})`)
       });
       describe('has getter methods', function() {
         it('should return the current width', function() {
-          expect(this.testMap.width()).toBe(this.width);
+          expect(testMap.width()).toBe(width);
         });
         it('should return the current height', function() {
-          expect(this.testMap.height()).toBe(this.height);
+          expect(testMap.height()).toBe(height);
         });
         it('should return the current margin object', function() {
-          expect(this.testMap.margin()).toEqual(this.margin);
+          expect(testMap.margin()).toEqual(margin);
         });
       });
       describe('has setter methods', function() {
         it('should set the width', function() {
-          expect(this.testMap.width()).toBe(this.width);
-          this.testMap.width(1000);
-          expect(this.testMap.width()).toBe(1000);
+          expect(testMap.width()).toBe(width);
+          testMap.width(1000);
+          expect(testMap.width()).toBe(1000);
         });
         it('should set the height', function() {
-          expect(this.testMap.height()).toBe(this.height);
-          this.testMap.height(1000);
-          expect(this.testMap.height()).toBe(1000);
+          expect(testMap.height()).toBe(height);
+          testMap.height(1000);
+          expect(testMap.height()).toBe(1000);
         });
         it('should set the margin object', function() {
           var newMargin = { top: 80, right: 70, bottom: 60, left: 50 }
-          expect(this.testMap.margin()).toBe(this.margin);
-          this.testMap.margin(newMargin);
-          expect(this.testMap.margin()).toEqual(newMargin);
+          expect(testMap.margin()).toBe(margin);
+          testMap.margin(newMargin);
+          expect(testMap.margin()).toEqual(newMargin);
         });
       });
     });
-
-    function selectSVG() {
-      return d3.select('svg');
-    }
-
-    function selectMapObject() {
-      return d3.select('g.mapContainer');
-    }
   });
 
   describe('The getJSON helper function', function() {
     describe('works with valid input', function() {
-      var gdata;
       beforeEach(function(done) {
-        this.testPromise = getJSON(worldDataLocal)
+        testPromise = getJSON(worldDataLocal)
           .then(function(data) {
             gdata = data;
             done();
@@ -103,8 +120,8 @@
           });
       });
       it('returns a promise', function() {
-        expect(typeof this.testPromise).toBe('object');
-        expect(this.testPromise.then()).not.toBe(undefined);
+        expect(typeof testPromise).toBe('object');
+        expect(testPromise.then).not.toBe(undefined);
       });
       it('should fetch JSON data from valid URL', function(done) {
         expect(gdata).not.toBe(null);
@@ -132,37 +149,8 @@
   });
 
   describe('The map object parses data', function() {
-    var meteoriteData, worldData, gdata;
-    function getChart() {
-      return d3.select('#chart');
-    }
-    function getSVG() {
-      return d3.select('svg');
-    }
-    function getMeteoriteStrikes() {
-      return getSVG().selectAll('circle.meteoriteStrike')[0];
-    }
-    function getMapPaths() {
-      return getSVG().selectAll('path.world')[0];
-    }
-    beforeEach(function(done) {
-      this.map = strikeMap();
-      var testMap = this.map;
-      Promise.all([getJSON(worldDataLocal), getJSON(meteorDataLocal)])
-        .then(function(data) {
-          gdata = data;
-          meteoriteData = data[1].features;
-          worldData = data[0].objects.countries;
-          getChart().datum(data).call(testMap);
-          done();
-        }).catch(function(error) {
-          console.eror(error);
-          done();
-        });
-    });
-    afterEach(function() {
-      getChart().html("");
-    });
+    beforeEach(setup);
+    afterEach(cleanup);
     describe('meteorite strikes', function() {
       it('should place a circle for each meteor strike', function(done) {
         var numberOfMeteors = meteoriteData.length;
@@ -170,7 +158,7 @@
         done();
       });
       it('should set each circle\'s position based on the coordinate data', function(done) {
-        var testProjection = this.map.getProjection();
+        var testProjection = testMap.getProjection();
         var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
         console.log(`Checking circle position with random number: ${someRandomNumber}`);
         var testCoords = testProjection([meteoriteData[someRandomNumber].properties.reclong, meteoriteData[someRandomNumber].properties.reclat]);
@@ -181,17 +169,17 @@
       it('should set the circle\'s radius based on the mass property', function(done) {
         var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
         console.log(`Checking circle's radius with random number: ${someRandomNumber}`);
-        var setRadius = this.map.getSetRadius();
+        var setRadius = testMap.getSetRadius();
         var circleRadius = +d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('r');
         expect(circleRadius).toBe(setRadius(meteoriteData[someRandomNumber].properties.mass));
-        expect(circleRadius).toBeLessThan(this.map.impactRadiusMax() + 1e-4);
-        expect(circleRadius).toBeGreaterThan(this.map.impactRadiusMin() - 1e-4);
+        expect(circleRadius).toBeLessThan(testMap.impactRadiusMax() + 1e-4);
+        expect(circleRadius).toBeGreaterThan(testMap.impactRadiusMin() - 1e-4);
         done();
       });
       it('should set the circle\'s hue based on the mass property', function(done) {
         var someRandomNumber = Math.floor(Math.random() * meteoriteData.length);
         console.log(`Checking circle's hue with random number: ${someRandomNumber}`);
-        var setHue = this.map.getSetHue();
+        var setHue = testMap.getSetHue();
         var circleHue = d3.select(getMeteoriteStrikes()[someRandomNumber]).attr('fill');
         expect(circleHue).toBe(setHue(meteoriteData[someRandomNumber].properties.mass));
         done();
@@ -218,7 +206,7 @@
       it('should draw the map', function(done) {
         var mapFeatures = topojson.feature(gdata[0], worldData).features;
         var someRandomNumber = Math.floor(Math.random() * mapFeatures.length);
-        var path = d3.geo.path().projection(this.map.getProjection());
+        var path = d3.geo.path().projection(testMap.getProjection());
         console.log(`Checking map path with random number: ${someRandomNumber}`);
         var testPath = path(mapFeatures[someRandomNumber]);
         expect(d3.select(getMapPaths()[someRandomNumber]).attr('d')).toEqual(testPath);
@@ -227,13 +215,22 @@
       it(`it should draw the map with a fill color of ${mapFillColor} and a stroke width of ${mapStrokeWith}`,function (done) {
           var mapFeatures = topojson.feature(gdata[0], worldData).features;
           var someRandomNumber = Math.floor(Math.random() * mapFeatures.length);
-          var path = d3.geo.path().projection(this.map.getProjection());
+          var path = d3.geo.path().projection(testMap.getProjection());
           console.log(`Checking map stroke and fill with random number: ${someRandomNumber}`);
           var testPath = path(mapFeatures[someRandomNumber]);
           expect(d3.select(getMapPaths()[someRandomNumber]).attr('fill')).toBe(mapFillColor);
           expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke-width')).toBe(mapStrokeWith);
         done();
       });
+    });
+  });
+
+  xdescribe('There should be buttons to navigate the map', function() {
+
+    it('should have four arrow buttons', function(done) {
+      console.log(d3.selectAll('.navBtn'))
+      expect(d3.selectAll('.navBtn')[0].length).toBe(4);
+      done();
     });
   });
 })();
