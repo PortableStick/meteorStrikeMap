@@ -230,8 +230,8 @@
           var path = d3.geo.path().projection(this.map.getProjection());
           console.log(`Checking map stroke and fill with random number: ${someRandomNumber}`);
           var testPath = path(mapFeatures[someRandomNumber]);
-          expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke-fill')).toBe(mapFillColor);
-          expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke')).toBe(mapStrokeWith);
+          expect(d3.select(getMapPaths()[someRandomNumber]).attr('fill')).toBe(mapFillColor);
+          expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke-width')).toBe(mapStrokeWith);
         done();
       });
     });
