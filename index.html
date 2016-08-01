@@ -14,12 +14,15 @@
   <script>
     window.onload = function() {
       var map = strikeMap();
-      map.width(500).height(500);
-      d3.select('#chart').call(map);
-      getJSON('https://dl.dropboxusercontent.com/u/4223104/world-50m.json')
-        .then(function(data) {
-          console.log(data);
-        });
+      var windowWidth = window.innerWidth;
+      var windowHeight = window.innerHeight;
+      map.width(windowWidth).height(windowHeight);
+      Promise.all([getJSON('world-50m.json'), getJSON('meteorite-strike-data.json')])
+      .then(function(data) {
+        d3.select("#chart").datum(data).call(map);
+      }).catch(function(error) {
+        console.error(error);
+      });
     }
   </script>
 </body>
