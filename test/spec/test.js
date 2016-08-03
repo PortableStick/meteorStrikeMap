@@ -213,23 +213,23 @@
         done();
       });
       it(`it should draw the map with a fill color of ${mapFillColor} and a stroke width of ${mapStrokeWith}`,function (done) {
-          var mapFeatures = topojson.feature(gdata[0], worldData).features;
-          var someRandomNumber = Math.floor(Math.random() * mapFeatures.length);
-          var path = d3.geo.path().projection(testMap.getProjection());
-          console.log(`Checking map stroke and fill with random number: ${someRandomNumber}`);
-          var testPath = path(mapFeatures[someRandomNumber]);
-          expect(d3.select(getMapPaths()[someRandomNumber]).attr('fill')).toBe(mapFillColor);
-          expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke-width')).toBe(mapStrokeWith);
+        var mapFeatures = topojson.feature(gdata[0], worldData).features;
+        var someRandomNumber = Math.floor(Math.random() * mapFeatures.length);
+        var path = d3.geo.path().projection(testMap.getProjection());
+        console.log(`Checking map stroke and fill with random number: ${someRandomNumber}`);
+        var testPath = path(mapFeatures[someRandomNumber]);
+        expect(d3.select(getMapPaths()[someRandomNumber]).attr('fill')).toBe(mapFillColor);
+        expect(d3.select(getMapPaths()[someRandomNumber]).attr('stroke-width')).toBe(mapStrokeWith);
         done();
       });
     });
   });
 
-  xdescribe('There should be buttons to navigate the map', function() {
-
+  describe('There should be buttons to navigate the map', function() {
+    beforeEach(setup);
+    afterEach(cleanup);
     it('should have four arrow buttons', function(done) {
-      console.log(d3.selectAll('.navBtn'))
-      expect(d3.selectAll('.navBtn')[0].length).toBe(4);
+      expect(getChart().selectAll('.navBtn')[0].length).toBe(4);
       done();
     });
   });
