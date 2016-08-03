@@ -6,10 +6,10 @@ function strikeMap() {
       impactRadiusMin = 4,
       impactRadiusMax = 40,
       lastTranslation = [0,0],
-      lastScale = null;
-  var margin = { top: 0, right: 0, bottom: 0, left: 0 },
-        width = 1680 - margin.left - margin.right,
-        height = 800 - margin.top - margin.bottom;
+      lastScale = null,
+      margin = { top: 0, right: 0, bottom: 0, left: 0 },
+      width = 1680 - margin.left - margin.right,
+      height = 800 - margin.top - margin.bottom;
   var projection = d3.geo.mercator()
                       .rotate([initialRotation, 0])
                       .scale(1)
@@ -29,6 +29,7 @@ function strikeMap() {
                 .scale(projection.scale())
                 .translate([0,0])
                 .on("zoom", redraw);
+  var buttonClasses = ['fa-chevron-right','fa-chevron-left','fa-chevron-up','fa-chevron-down'];
 
   function chart(selection) {
     d3.select(this).html("") // clear present maps before redrawing
@@ -88,6 +89,10 @@ function strikeMap() {
           'stroke': 1,
           'stroke-fill': 'white'
         });
+        var navigation = svg.append('div').classed('navigation', true);
+      var navButtons = buttonClasses.forEach(function(btn) {
+        navigation.append('div').classed({'fa': true, 'navBtn': true}).classed(btn, true);
+      });
 
     });//selection
   }
@@ -128,6 +133,7 @@ function strikeMap() {
             return projection([d.properties.reclong, d.properties.reclat])[1]
           }})
   }
+
 
   function findMercatorBounds(projection, maximumLatitude) {
     var yaw = projection.rotate()[0],
