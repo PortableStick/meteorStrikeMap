@@ -3,8 +3,6 @@ function strikeMap() {
   var maximumLatitude = 83,
       initialRotation = 60,
       maximumScaleFactor = 10,
-      impactRadiusMin = 4,
-      impactRadiusMax = 40,
       lastTranslation = [0,0],
       lastScale = null,
       margin = { top: 0, right: 0, bottom: 0, left: 0 },
@@ -12,9 +10,9 @@ function strikeMap() {
       height = 800 - margin.top - margin.bottom;
   var projection = d3.geo.mercator()
                       .rotate([initialRotation, 0])
-                      .scale(1)
+                      .scale(0.85)
                       .translate([width / 2, height / 2]);
-  var impactScale = d3.scale.pow();
+  var impactScale = d3.scale.quantile().range([2, 4, 8, 10, 16, 40]);
   var colorScale = d3.scale.category10();
 
   var bounds = findMercatorBounds(projection, maximumLatitude),
@@ -53,7 +51,11 @@ function strikeMap() {
       var worldData = data[0];
       var meteorites = data[1].features;
       var massData = meteorites.map(function(d){return +d.properties.mass || 1;});
-      impactScale.domain(d3.extent(massData)).range([impactRadiusMin, impactRadiusMax]);
+      var median = d3.median(massData);
+      var inputDomain = [d3.extent(massData)[0], median, median * 2, median * 4, d3.extent(massData)[1]];
+      impactScale.domain(inputDomain);
+      console.log(median);
+      console.log(impactScale.quantiles());
 
       var world = svg.append('g')
             .selectAll('path')
@@ -89,10 +91,10 @@ function strikeMap() {
           'stroke': 1,
           'stroke-fill': 'white'
         });
-        var navigation = svg.append('div').classed('navigation', true);
-      var navButtons = buttonClasses.forEach(function(btn) {
-        navigation.append('div').classed({'fa': true, 'navBtn': true}).classed(btn, true);
-      });
+        var navigation = d3.select('#chart').append('div').classed('navigation', true);
+        var navButtons = buttonClasses.forEach(function(btn) {
+          navigation.append('div').classed({'fa': true, 'navBtn': true}).classed(btn, true);
+        });
 
     });//selection
   }
@@ -112,7 +114,7 @@ function strikeMap() {
 
         projection.rotate([yaw + 360 * deltaX / width * scaleExtent[0] / scale, 0, 0]);
         var newBounds = findMercatorBounds(projection, maximumLatitude);
-        if(newBounds[0][1] + deltaY > 0) { deltaY = -b[0][1];}
+        if(newBounds[0][1] + deltaY > 0) { deltaY = -newBounds[0][1];}
         else if(newBounds[1][1] + deltaY < height) {deltaY = height - newBounds[1][1];}
 
         projection.translate([projectionTranslation[0], projectionTranslation[1] + deltaY])
@@ -121,10 +123,6 @@ function strikeMap() {
       lastScale = scale;
       lastTranslation = translation;
     }
-    d3.select('svg.main').attr({
-            'width': width + margin.left + margin.right,
-            'height': height + margin.top + margin.bottom
-        });
     d3.selectAll('path').attr({'d': path});
     d3.selectAll('circle').attr({'cx': function(d) {
             return projection([d.properties.reclong, d.properties.reclat])[0]
