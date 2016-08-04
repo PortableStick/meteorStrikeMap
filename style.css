@@ -1,0 +1,14 @@
+svg.main {
+  display: block;
+  margin: auto;
+  border: solid black 2px;
+}
+
+div.navigation {
+  background-color: rgba(255,255,255,0.4);
+  color: white;
+}
+
+circle.meteoriteStrike {
+  stroke: white;
+}
