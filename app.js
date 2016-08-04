@@ -96,7 +96,6 @@ function strikeMap() {
   }
 
   function zoomed() {
-    console.log(d3.event.translate);
     projection.translate(d3.event.translate).scale(d3.event.scale);
     d3.selectAll('path').attr({'d': path});
     d3.selectAll('circle').attr({'cx': function(d) {
@@ -106,40 +105,6 @@ function strikeMap() {
             return projection([d.properties.reclong, d.properties.reclat])[1]
           }});
   }
-
-  // function redraw() {
-  //   if(d3.event) {
-  //     var scale = d3.event.scale,
-  //         translation = d3.event.translate;
-
-  //     if(scale !== lastScale) {
-  //       projection.scale(scale);
-  //     } else {
-  //       var deltaX = translation[0] - lastTranslation[0],
-  //           deltaY = translation[1] - lastTranslation[1],
-  //           yaw = projection.rotate()[0],
-  //           projectionTranslation = projection.translate();
-
-  //       projection.rotate([yaw + 360 * deltaX / width * scaleExtent[0] / scale, 0, 0]);
-  //       var newBounds = findMercatorBounds(projection, maximumLatitude);
-  //       if(newBounds[0][1] + deltaY > 0) { deltaY = -newBounds[0][1];}
-  //       else if(newBounds[1][1] + deltaY < height) {deltaY = height - newBounds[1][1];}
-
-  //       projection.translate([projectionTranslation[0], projectionTranslation[1] + deltaY])
-  //     }
-
-  //     lastScale = scale;
-  //     lastTranslation = translation;
-  //   }
-  //   d3.selectAll('path').attr({'d': path});
-  //   d3.selectAll('circle').attr({'cx': function(d) {
-  //           return projection([d.properties.reclong, d.properties.reclat])[0]
-  //         },
-  //         'cy': function(d) {
-  //           return projection([d.properties.reclong, d.properties.reclat])[1]
-  //         }})
-  // }
-
 
   function findMercatorBounds(projection, maximumLatitude) {
     var yaw = projection.rotate()[0],

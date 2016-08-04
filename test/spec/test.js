@@ -224,6 +224,7 @@
       });
     });
   });
+<<<<<<< HEAD
 
   describe('There should be buttons to navigate the map', function() {
     beforeEach(setup);
@@ -233,4 +234,6 @@
       done();
     });
   });
+=======
+>>>>>>> 4bf23bc... Cleanup
 })();
