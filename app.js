@@ -30,6 +30,11 @@ function strikeMap() {
                 .translate(projection.translate())
                 .on("zoom", zoomed);
   var buttonClasses = ['fa-chevron-right','fa-chevron-left','fa-chevron-up','fa-chevron-down'];
+  var tooltip = d3.select('body').append('div').classed('tooltip', true)
+                  .style({
+                    opacity: 0,
+                    position: 'absolute'
+                  });
 
   function chart(selection) {
     d3.select(this).html("") // clear present maps before redrawing
@@ -91,8 +96,36 @@ function strikeMap() {
           'fill-opacity': 0.5,
           'stroke': 1,
           'stroke-fill': 'white'
+        })
+        .on('mouseover', function(d) {
+          tooltip.style({
+            opacity: 0.8,
+            'top': function() { return `${d3.event.pageY - 50}px`; },
+            'left': function() { return `${d3.event.pageX + 30}px`; }
+          })
+          .html(`<h1>${d.properties.name}</h1>
+  <h2>${formatMass(d.properties.mass)}</h2>
+  <h3>Year fell: ${d.properties.year.slice(0,4)}</h3>`);
+        })
+        .on('mouseout', function() {
+          tooltip.style({
+            'opacity': 0,
+            'top': `${-9999}px`,
+            'left':`${-9999}px`
+          })
         });
     });//selection
+  }
+
+  function formatMass(mass) {
+    mass = +mass;
+    if (mass > 1000000) {
+      return `${mass.toFixed(1)/1000000} ${mass === 1 ? 'megagram' : 'megagrams'}`;
+    } else if(mass > 1000) {
+      return `${mass.toFixed(1)/1000} ${mass === 1 ? 'kilogram' : 'kilograms'}`;
+    } else {
+      return `${mass} ${mass === 1 ? 'gram' : 'grams'}`;
+    }
   }
 
   function zoomed() {
