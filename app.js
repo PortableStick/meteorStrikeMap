@@ -4,6 +4,8 @@ function strikeMap() {
       initialRotation = 60,
       maximumScaleFactor = 10,
       lastTranslation = [0,0],
+      impactRadiusMax = 40,
+      impactRadiusMin = 4,
       lastScale = null,
       margin = { top: 0, right: 0, bottom: 0, left: 0 },
       width = 1680 - margin.left - margin.right,
@@ -12,7 +14,7 @@ function strikeMap() {
                       .rotate([initialRotation, 0])
                       .scale(0.85)
                       .translate([width / 2, height / 2]);
-  var impactScale = d3.scale.quantile().range([2, 4, 8, 10, 16, 40]);
+  var impactScale = d3.scale.quantile().range([impactRadiusMin, 8, 10, 16, 20, impactRadiusMax]);
   var colorScale = d3.scale.category10();
 
   var bounds = findMercatorBounds(projection, maximumLatitude),
@@ -25,8 +27,8 @@ function strikeMap() {
   var zoom = d3.behavior.zoom()
                 .scaleExtent(scaleExtent)
                 .scale(projection.scale())
-                .translate([0,0])
-                .on("zoom", redraw);
+                .translate(projection.translate())
+                .on("zoom", zoomed);
   var buttonClasses = ['fa-chevron-right','fa-chevron-left','fa-chevron-up','fa-chevron-down'];
 
   function chart(selection) {
@@ -54,8 +56,7 @@ function strikeMap() {
       var median = d3.median(massData);
       var inputDomain = [d3.extent(massData)[0], median, median * 2, median * 4, d3.extent(massData)[1]];
       impactScale.domain(inputDomain);
-      console.log(median);
-      console.log(impactScale.quantiles());
+      colorScale.domain(inputDomain);
 
       var world = svg.append('g')
             .selectAll('path')
@@ -91,46 +92,53 @@ function strikeMap() {
           'stroke': 1,
           'stroke-fill': 'white'
         });
-        var navigation = d3.select('#chart').append('div').classed('navigation', true);
-        var navButtons = buttonClasses.forEach(function(btn) {
-          navigation.append('div').classed({'fa': true, 'navBtn': true}).classed(btn, true);
-        });
-
     });//selection
   }
 
-  function redraw() {
-    if(d3.event) {
-      var scale = d3.event.scale,
-          translation = d3.event.translate;
-
-      if(scale !== lastScale) {
-        projection.scale(scale);
-      } else {
-        var deltaX = translation[0] - lastTranslation[0],
-            deltaY = translation[1] - lastTranslation[1],
-            yaw = projection.rotate()[0],
-            projectionTranslation = projection.translate();
-
-        projection.rotate([yaw + 360 * deltaX / width * scaleExtent[0] / scale, 0, 0]);
-        var newBounds = findMercatorBounds(projection, maximumLatitude);
-        if(newBounds[0][1] + deltaY > 0) { deltaY = -newBounds[0][1];}
-        else if(newBounds[1][1] + deltaY < height) {deltaY = height - newBounds[1][1];}
-
-        projection.translate([projectionTranslation[0], projectionTranslation[1] + deltaY])
-      }
-
-      lastScale = scale;
-      lastTranslation = translation;
-    }
+  function zoomed() {
+    console.log(d3.event.translate);
+    projection.translate(d3.event.translate).scale(d3.event.scale);
     d3.selectAll('path').attr({'d': path});
     d3.selectAll('circle').attr({'cx': function(d) {
             return projection([d.properties.reclong, d.properties.reclat])[0]
           },
           'cy': function(d) {
             return projection([d.properties.reclong, d.properties.reclat])[1]
-          }})
+          }});
   }
+
+  // function redraw() {
+  //   if(d3.event) {
+  //     var scale = d3.event.scale,
+  //         translation = d3.event.translate;
+
+  //     if(scale !== lastScale) {
+  //       projection.scale(scale);
+  //     } else {
+  //       var deltaX = translation[0] - lastTranslation[0],
+  //           deltaY = translation[1] - lastTranslation[1],
+  //           yaw = projection.rotate()[0],
+  //           projectionTranslation = projection.translate();
+
+  //       projection.rotate([yaw + 360 * deltaX / width * scaleExtent[0] / scale, 0, 0]);
+  //       var newBounds = findMercatorBounds(projection, maximumLatitude);
+  //       if(newBounds[0][1] + deltaY > 0) { deltaY = -newBounds[0][1];}
+  //       else if(newBounds[1][1] + deltaY < height) {deltaY = height - newBounds[1][1];}
+
+  //       projection.translate([projectionTranslation[0], projectionTranslation[1] + deltaY])
+  //     }
+
+  //     lastScale = scale;
+  //     lastTranslation = translation;
+  //   }
+  //   d3.selectAll('path').attr({'d': path});
+  //   d3.selectAll('circle').attr({'cx': function(d) {
+  //           return projection([d.properties.reclong, d.properties.reclat])[0]
+  //         },
+  //         'cy': function(d) {
+  //           return projection([d.properties.reclong, d.properties.reclat])[1]
+  //         }})
+  // }
 
 
   function findMercatorBounds(projection, maximumLatitude) {
